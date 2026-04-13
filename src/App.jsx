@@ -29,9 +29,10 @@ const projects = [
     title: "Inovah Cleaning Services",
     desc: "Freelance web/mobile booking system for a cleaning service business — customers can schedule appointments and communicate with staff in real time.",
     tags: ["React", "JavaScript", "CSS"],
-    year: "2024",
+    year: "2026",
     accent: "#61DAFB",
     num: "02",
+    url: "https://www.ilovahcleaningservices.com.au/",
   },
   {
     id: 3,
@@ -79,6 +80,19 @@ function useInView(threshold = 0.15) {
     return () => obs.disconnect();
   }, [threshold]);
   return [ref, inView];
+}
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const handler = (e) => setMatches(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [query]);
+  return matches;
 }
 
 /* ── CTA styles ── */
@@ -131,71 +145,171 @@ const cta = {
 /* ── Navbar ── */
 function Navbar({ activeSection }) {
   const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 640px)");
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close menu on resize to desktop
+  useEffect(() => {
+    if (!isMobile) setMenuOpen(false);
+  }, [isMobile]);
+
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 24px",
-        height: 64,
-        background: scrolled ? "rgba(8,8,12,0.85)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "none",
-        transition: "all 0.3s ease",
-      }}
-    >
-      <div
+    <>
+      <nav
         style={{
-          fontFamily: "'Syne', sans-serif",
-          fontWeight: 800,
-          fontSize: 18,
-          letterSpacing: "-0.03em",
-          color: "#fff",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 24px",
+          height: 64,
+          background: scrolled || menuOpen ? "rgba(8,8,12,0.95)" : "transparent",
+          backdropFilter: scrolled || menuOpen ? "blur(16px)" : "none",
+          borderBottom: scrolled || menuOpen ? "1px solid rgba(255,255,255,0.06)" : "none",
+          transition: "all 0.3s ease",
         }}
       >
-        &lt;FBP/&gt;
-      </div>
-      <div style={{ display: "flex", gap: 32 }}>
-        {navLinks.map((l) => (
-          <a
-            key={l}
-            href={`#${l.toLowerCase()}`}
+        <div
+          style={{
+            fontFamily: "'Syne', sans-serif",
+            fontWeight: 800,
+            fontSize: 18,
+            letterSpacing: "-0.03em",
+            color: "#fff",
+          }}
+        >
+          &lt;FBP/&gt;
+        </div>
+
+        {/* Desktop nav links */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 32 }}>
+            {navLinks.map((l) => (
+              <a
+                key={l}
+                href={`#${l.toLowerCase()}`}
+                style={{
+                  fontSize: 13,
+                  color:
+                    activeSection === l.toLowerCase()
+                      ? "#fff"
+                      : "rgba(255,255,255,0.4)",
+                  textDecoration: "none",
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  fontWeight: 500,
+                  transition: "color 0.2s",
+                }}
+              >
+                {l}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Hamburger */}
+        {isMobile && (
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
             style={{
-              fontSize: 13,
-              color:
-                activeSection === l.toLowerCase()
-                  ? "#fff"
-                  : "rgba(255,255,255,0.4)",
-              textDecoration: "none",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              fontWeight: 500,
-              transition: "color 0.2s",
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              padding: 8,
+              display: "flex",
+              flexDirection: "column",
+              gap: 5,
             }}
+            aria-label="Toggle menu"
           >
-            {l}
-          </a>
-        ))}
-      </div>
-    </nav>
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                style={{
+                  display: "block",
+                  width: 22,
+                  height: 2,
+                  background: "#fff",
+                  borderRadius: 2,
+                  transition: "transform 0.25s, opacity 0.25s",
+                  transform:
+                    menuOpen
+                      ? i === 0
+                        ? "translateY(7px) rotate(45deg)"
+                        : i === 2
+                          ? "translateY(-7px) rotate(-45deg)"
+                          : "scaleX(0)"
+                      : "none",
+                  opacity: menuOpen && i === 1 ? 0 : 1,
+                }}
+              />
+            ))}
+          </button>
+        )}
+      </nav>
+
+      {/* Mobile dropdown menu */}
+      {isMobile && (
+        <div
+          style={{
+            position: "fixed",
+            top: 64,
+            left: 0,
+            right: 0,
+            zIndex: 99,
+            background: "rgba(8,8,12,0.97)",
+            backdropFilter: "blur(16px)",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            overflow: "hidden",
+            maxHeight: menuOpen ? 300 : 0,
+            transition: "max-height 0.35s cubic-bezier(0.16,1,0.3,1)",
+          }}
+        >
+          {navLinks.map((l) => (
+            <a
+              key={l}
+              href={`#${l.toLowerCase()}`}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                display: "block",
+                padding: "16px 24px",
+                fontSize: 15,
+                color:
+                  activeSection === l.toLowerCase()
+                    ? "#fff"
+                    : "rgba(255,255,255,0.45)",
+                textDecoration: "none",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                fontWeight: 600,
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+                transition: "color 0.2s",
+              }}
+            >
+              {l}
+            </a>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 
 /* ── Hero ── */
 function Hero() {
   const [mounted, setMounted] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 100);
     return () => clearTimeout(t);
@@ -210,28 +324,28 @@ function Hero() {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        padding: "100px 24px 60px",
+        padding: isMobile ? "100px 20px 60px" : "100px 24px 60px",
         position: "relative",
         overflow: "hidden",
         boxSizing: "border-box",
       }}
     >
       {/* Ambient blobs */}
-      <div style={{ position: "absolute", top: "10%", right: "5%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <div style={{ position: "absolute", bottom: "5%", left: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "10%", right: "5%", width: isMobile ? 280 : 500, height: isMobile ? 280 : 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: "5%", left: "-5%", width: isMobile ? 220 : 400, height: isMobile ? 220 : 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(20,184,166,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
 
-      {/* Two-column grid */}
+      {/* Two-column grid → single column on mobile */}
       <div style={{
         width: "100%",
         maxWidth: "100%",
         display: "grid",
-        gridTemplateColumns: "1fr 280px",
-        gap: "3rem",
+        gridTemplateColumns: isMobile ? "1fr" : "1fr 280px",
+        gap: isMobile ? "2.5rem" : "3rem",
         alignItems: "center",
       }}>
 
         {/* ── Left: text ── */}
-        <div>
+        <div style={{ order: isMobile ? 2 : 1 }}>
           {/* Status badge */}
           <div style={{
             display: "inline-flex", alignItems: "center", gap: 8,
@@ -248,7 +362,7 @@ function Hero() {
           {/* Headline */}
           <h1 style={{
             fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: "clamp(2.4rem, 4.5vw, 4rem)",
+            fontSize: "clamp(2.2rem, 8vw, 4rem)",
             lineHeight: 1.05, letterSpacing: "-0.04em",
             color: "#fff", margin: "0 0 0.5rem",
             opacity: mounted ? 1 : 0,
@@ -259,7 +373,7 @@ function Hero() {
           </h1>
           <h1 style={{
             fontFamily: "'Syne', sans-serif", fontWeight: 800,
-            fontSize: "clamp(2.4rem, 4.5vw, 4rem)",
+            fontSize: "clamp(2.2rem, 8vw, 4rem)",
             lineHeight: 1.05, letterSpacing: "-0.04em",
             color: "#fff", margin: "0 0 1rem",
             opacity: mounted ? 1 : 0,
@@ -271,7 +385,7 @@ function Hero() {
           </h1>
 
           <p style={{
-            fontSize: 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.7,
+            fontSize: isMobile ? 14 : 15, color: "rgba(255,255,255,0.45)", lineHeight: 1.7,
             fontWeight: 300, margin: "0 0 1.5rem", maxWidth: 460,
             opacity: mounted ? 1 : 0,
             transform: mounted ? "translateY(0)" : "translateY(20px)",
@@ -305,9 +419,12 @@ function Hero() {
           </div>
         </div>
 
-        {/* ── Right: image placeholder ── */}
+        {/* ── Right: image ── */}
         <div style={{
           position: "relative",
+          order: isMobile ? 1 : 2,
+          maxWidth: isMobile ? 220 : "100%",
+          margin: isMobile ? "0 auto" : "0",
           opacity: mounted ? 1 : 0,
           transform: mounted ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
           transition: "all 0.8s cubic-bezier(0.16,1,0.3,1) 0.35s",
@@ -323,7 +440,7 @@ function Hero() {
             alt="Frank Bernard Pidot"
             style={{
               width: "100%",
-              height: 320,
+              height: isMobile ? 240 : 320,
               borderRadius: 16,
               objectFit: "cover",
               objectPosition: "center top",
@@ -380,7 +497,7 @@ function SectionHeader({ label, title, inView }) {
         style={{
           fontFamily: "'Syne', sans-serif",
           fontWeight: 800,
-          fontSize: "clamp(1.8rem, 4vw, 2.8rem)",
+          fontSize: "clamp(1.8rem, 6vw, 2.8rem)",
           color: "#fff",
           margin: "0.5rem 0 0",
           letterSpacing: "-0.03em",
@@ -397,9 +514,13 @@ function SectionHeader({ label, title, inView }) {
 function SkillsSection() {
   const [ref, inView] = useInView();
   const [hovered, setHovered] = useState(null);
+  const isMobile = useMediaQuery("(max-width: 480px)");
+  const isTablet = useMediaQuery("(max-width: 768px)");
+
+  const cols = isMobile ? "1fr" : isTablet ? "repeat(2, minmax(0,1fr))" : "repeat(3, minmax(0,1fr))";
 
   return (
-    <section id="skills" ref={ref} style={{ padding: "7rem 24px", position: "relative" }}>
+    <section id="skills" ref={ref} style={{ padding: isMobile ? "5rem 20px" : "7rem 24px", position: "relative" }}>
       <div style={{ width: "100%" }}>
         <SectionHeader label="Expertise" title="Skills & tools" inView={inView} />
 
@@ -431,7 +552,7 @@ function SkillsSection() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0,1fr))",
+            gridTemplateColumns: cols,
             gap: 12,
             marginTop: "2rem",
           }}
@@ -540,7 +661,7 @@ function SkillsSection() {
         {/* Education note */}
         <div style={{
           marginTop: "3rem",
-          padding: "1.5rem 2rem",
+          padding: isMobile ? "1.25rem" : "1.5rem 2rem",
           borderRadius: 16,
           background: "rgba(99,102,241,0.07)",
           border: "1px solid rgba(99,102,241,0.15)",
@@ -550,7 +671,7 @@ function SkillsSection() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 }}>
             <div>
               <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#818cf8", margin: "0 0 4px" }}>Education</p>
-              <p style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 16, color: "#fff", margin: "0 0 4px" }}>Pangasinan State University – Urdaneta City Campus</p>
+              <p style={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: isMobile ? 14 : 16, color: "#fff", margin: "0 0 4px" }}>Pangasinan State University – Urdaneta City Campus</p>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", margin: 0 }}>BS Information Technology · Web and Mobile Development</p>
             </div>
             <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>2022 – Present</span>
@@ -565,9 +686,10 @@ function SkillsSection() {
 function ProjectsSection() {
   const [ref, inView] = useInView();
   const [hovered, setHovered] = useState(null);
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   return (
-    <section id="projects" ref={ref} style={{ padding: "7rem 24px" }}>
+    <section id="projects" ref={ref} style={{ padding: isMobile ? "5rem 20px" : "7rem 24px" }}>
       <div style={{ width: "100%" }}>
         <SectionHeader label="Portfolio" title="Featured projects" inView={inView} />
         <div
@@ -585,10 +707,10 @@ function ProjectsSection() {
               onMouseLeave={() => setHovered(null)}
               style={{
                 display: "grid",
-                gridTemplateColumns: "80px 1fr auto",
-                alignItems: "center",
-                gap: "2rem",
-                padding: "2rem 1.5rem",
+                gridTemplateColumns: isMobile ? "1fr" : "80px 1fr auto",
+                alignItems: isMobile ? "flex-start" : "center",
+                gap: isMobile ? "0.75rem" : "2rem",
+                padding: isMobile ? "1.5rem 1rem" : "2rem 1.5rem",
                 borderRadius: 16,
                 background:
                   hovered === p.id ? "rgba(255,255,255,0.04)" : "transparent",
@@ -599,18 +721,20 @@ function ProjectsSection() {
                 transition: `opacity 0.5s ease ${i * 0.1}s, transform 0.5s ease ${i * 0.1}s, background 0.2s`,
               }}
             >
-              {/* Big number */}
-              <div
-                style={{
-                  fontFamily: "'Syne', sans-serif",
-                  fontWeight: 800,
-                  fontSize: 42,
-                  color: "rgba(255,255,255,0.06)",
-                  lineHeight: 1,
-                }}
-              >
-                {p.num}
-              </div>
+              {/* Big number — hidden on mobile to save space */}
+              {!isMobile && (
+                <div
+                  style={{
+                    fontFamily: "'Syne', sans-serif",
+                    fontWeight: 800,
+                    fontSize: 42,
+                    color: "rgba(255,255,255,0.06)",
+                    lineHeight: 1,
+                  }}
+                >
+                  {p.num}
+                </div>
+              )}
 
               {/* Info */}
               <div>
@@ -620,13 +744,22 @@ function ProjectsSection() {
                     alignItems: "center",
                     gap: 12,
                     marginBottom: 6,
+                    flexWrap: "wrap",
                   }}
                 >
+                  {isMobile && (
+                    <span style={{
+                      fontFamily: "'Syne', sans-serif",
+                      fontWeight: 800,
+                      fontSize: 13,
+                      color: "rgba(255,255,255,0.15)",
+                    }}>{p.num}</span>
+                  )}
                   <h3
                     style={{
                       fontFamily: "'Syne', sans-serif",
                       fontWeight: 700,
-                      fontSize: 20,
+                      fontSize: isMobile ? 16 : 20,
                       color: "#fff",
                       margin: 0,
                     }}
@@ -645,7 +778,7 @@ function ProjectsSection() {
                 </div>
                 <p
                   style={{
-                    fontSize: 14,
+                    fontSize: isMobile ? 13 : 14,
                     color: "rgba(255,255,255,0.4)",
                     lineHeight: 1.6,
                     margin: "0 0 12px",
@@ -654,7 +787,7 @@ function ProjectsSection() {
                 >
                   {p.desc}
                 </p>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
                   {p.tags.map((t) => (
                     <span
                       key={t}
@@ -671,33 +804,57 @@ function ProjectsSection() {
                       {t}
                     </span>
                   ))}
+                  {p.url && (
+                    <a
+                      href={p.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        fontSize: 11,
+                        letterSpacing: "0.05em",
+                        padding: "3px 12px",
+                        borderRadius: 4,
+                        background: `rgba(${p.accent === "#61DAFB" ? "97,218,251" : "99,102,241"},0.1)`,
+                        border: `1px solid ${p.accent}44`,
+                        color: p.accent,
+                        textDecoration: "none",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4,
+                        fontWeight: 600,
+                        transition: "background 0.2s, border-color 0.2s",
+                      }}
+                    >
+                      View Website ↗
+                    </a>
+                  )}
                 </div>
               </div>
 
               {/* Arrow */}
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: "50%",
-                  border: `1px solid ${hovered === p.id ? p.accent : "rgba(255,255,255,0.1)"
-                    }`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color:
-                    hovered === p.id ? p.accent : "rgba(255,255,255,0.3)",
-                  fontSize: 18,
-                  transform:
-                    hovered === p.id
-                      ? "translateX(4px) rotate(-45deg)"
-                      : "rotate(0deg)",
-                  transition:
-                    "transform 0.25s ease, border-color 0.25s, color 0.25s",
-                }}
-              >
-                ↗
-              </div>
+              {!isMobile && (
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    border: `1px solid ${hovered === p.id ? p.accent : "rgba(255,255,255,0.1)"}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: hovered === p.id ? p.accent : "rgba(255,255,255,0.3)",
+                    fontSize: 18,
+                    transform:
+                      hovered === p.id
+                        ? "translateX(4px) rotate(-45deg)"
+                        : "rotate(0deg)",
+                    transition: "transform 0.25s ease, border-color 0.25s, color 0.25s",
+                  }}
+                >
+                  ↗
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -709,12 +866,13 @@ function ProjectsSection() {
 /* ── Contact ── */
 function ContactSection() {
   const [ref, inView] = useInView();
+  const isMobile = useMediaQuery("(max-width: 640px)");
 
   return (
     <section
       id="contact"
       ref={ref}
-      style={{ padding: "7rem 24px 8rem" }}
+      style={{ padding: isMobile ? "5rem 20px 6rem" : "7rem 24px 8rem" }}
     >
       <div style={{ width: "100%" }}>
         <div
@@ -723,7 +881,7 @@ function ContactSection() {
               "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(20,184,166,0.08) 100%)",
             border: "1px solid rgba(99,102,241,0.2)",
             borderRadius: 24,
-            padding: "4rem",
+            padding: isMobile ? "2.5rem 1.5rem" : "4rem",
             textAlign: "center",
             opacity: inView ? 1 : 0,
             transform: inView ? "translateY(0)" : "translateY(30px)",
@@ -775,7 +933,7 @@ function ContactSection() {
             style={{
               fontFamily: "'Syne', sans-serif",
               fontWeight: 800,
-              fontSize: "clamp(2rem, 4vw, 3rem)",
+              fontSize: "clamp(1.8rem, 7vw, 3rem)",
               color: "#fff",
               margin: "1rem 0",
               letterSpacing: "-0.03em",
@@ -788,7 +946,7 @@ function ContactSection() {
           </h2>
           <p
             style={{
-              fontSize: 16,
+              fontSize: isMobile ? 14 : 16,
               color: "rgba(255,255,255,0.4)",
               lineHeight: 1.7,
               maxWidth: 400,
@@ -800,11 +958,13 @@ function ContactSection() {
             about your next big idea.
           </p>
           <p style={{
-            fontSize: 14,
+            fontSize: 13,
             color: "rgba(255,255,255,0.3)",
             margin: "0 auto 2.5rem",
+            lineHeight: 1.8,
           }}>
-            📍 San Quintin, Pangasinan &nbsp;·&nbsp; 📞 +63 998 186 0356
+            📍 San Quintin, Pangasinan
+            {isMobile ? <><br />📞 +63 998 186 0356</> : <>&nbsp;·&nbsp;📞 +63 998 186 0356</>}
           </p>
           <div
             style={{
@@ -880,6 +1040,9 @@ export default function Portfolio() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body, #root { width: 100% !important; margin: 0 !important; padding: 0 !important; background: #08080c; }
         body { overflow-x: hidden; }
+        @media (max-width: 640px) {
+          html { font-size: 15px; }
+        }
       `}</style>
       {/* Subtle grid background */}
       <div
